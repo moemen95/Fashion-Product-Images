@@ -1,0 +1,11 @@
+First Query:
+All types of Male shoes from years after 2012
+gender='Men' and subCategory='shoes' and year > 2012 order by year
+
+Second Query:
+All types and colours of Women bags from season winter
+gender='Women' and subCategory = 'Bags' and season='Winter' order by year
+
+Third Query:
+All types and colours of Male Tshirts with Casual Usage and season='summer'
+gender='Men' and articleType='Tshirts' and `usage` = 'Casual' and `season`='Summer' order by year
