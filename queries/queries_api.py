@@ -1,7 +1,9 @@
 from typing import List, Dict
 
+import boto3
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from tqdm import tqdm
 
 
 def connect_to_fashion_database(user, password, host, database_name) -> Engine:
@@ -62,19 +64,42 @@ ORDER BY {}
     return ret
 
 
+def store_images_n_metadata_in_S3_bucket(bucket_name, rows: List[Dict], image_key) -> None:
+    """
+    Store images and their metadata in json
+    :param rows: List[Dict] contains the results of the queries
+    :return:
+    """
+    s3_client = boto3.client('s3')
+    for row in tqdm(rows):
+        filename = row[image_key]
+        # TODO Fix the upload path
+        response = s3_client.upload_file(filename, bucket_name, filename)
+
+
+def fetch_n_store(engine, select, where_dict, order_by, s3_bucket_name) -> None:
+    res = fetch_query_from_meta_data(engine=engine,
+                                     select=select,
+                                     where_dict=where_dict,
+                                     order_by=order_by)
+    print(res)
+    store_images_n_metadata_in_S3_bucket(s3_bucket_name, res, "low_res_image_path")
+
+
 def test():
     engine = connect_to_fashion_database("moemen",
                                          "moemen",
                                          "localhost",
                                          "fashion")
-    res = fetch_query_from_meta_data(engine=engine,
-                                     select=["hi_res_image_path", "asset_link"],
-                                     where_dict={
-                                         "gender": ["=", "Men"],
-                                         "subCategory": ["=", "shoes"],
-                                         "year": [">", "2012"],
-                                     })
-    print(res)
+    fetch_n_store(engine=engine,
+                  select=["low_res_image_path", "hi_res_image_path", "asset_link"],
+                  where_dict={
+                      "gender": ["=", "Men"],
+                      "subCategory": ["=", "shoes"],
+                      "year": [">", "2012"],
+                  },
+                  order_by="year",
+                  s3_bucket_name="moemenfashionbucket")
 
 
 if __name__ == '__main__':
