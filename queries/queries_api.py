@@ -57,6 +57,7 @@ ORDER BY {}
 
     ret = []  # The return list of dicts
 
+    print("Executing the query")
     # connect and execute the query
     with engine.connect() as conn:
         result = conn.execute(text(fetch_query))
@@ -64,6 +65,7 @@ ORDER BY {}
         for row in result:
             # Append the dict of every select key with it's value
             ret.append(dict((select_key, row[select_key]) for select_key in select))  # Hmmm too Complicated ! xDxD
+    print("Query Done.")
     return ret
 
 
