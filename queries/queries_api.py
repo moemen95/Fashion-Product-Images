@@ -1,3 +1,4 @@
+import json
 from typing import List, Dict
 
 import boto3
@@ -64,26 +65,34 @@ ORDER BY {}
     return ret
 
 
-def store_images_n_metadata_in_S3_bucket(bucket_name, rows: List[Dict], image_key) -> None:
+def store_images_n_metadata_in_S3_bucket(bucket_name, cloud_root, rows: List[Dict], image_key) -> None:
     """
-    Store images and their metadata in json
+    Store images and their metadata in json called (meta-data.json)
+    :param bucket_name: name of the aws bucket
+    :param cloud_root: root folder in the aws bucket
     :param rows: List[Dict] contains the results of the queries
+    :param image_key: the key of the image in the row of the query
     :return:
     """
+    print("Uploading images to AWS S3 Bucket..")
     s3_client = boto3.client('s3')
     for row in tqdm(rows):
         filename = row[image_key]
-        # TODO Fix the upload path
-        response = s3_client.upload_file(filename, bucket_name, filename)
+        object_name = cloud_root + filename.split("/")[-1]
+        response = s3_client.upload_file(filename, bucket_name, object_name)
+    json_name = cloud_root + "meta-data.json"
+    s3_resource = boto3.resource('s3')
+    s3object = s3_resource.Object(bucket_name, json_name)
+    s3object.put(Body=(bytes(json.dumps(rows).encode('UTF-8'))))
 
 
-def fetch_n_store(engine, select, where_dict, order_by, s3_bucket_name) -> None:
+def fetch_n_store(engine, select, where_dict, order_by, s3_bucket_name, cloud_root) -> None:
     res = fetch_query_from_meta_data(engine=engine,
                                      select=select,
                                      where_dict=where_dict,
                                      order_by=order_by)
     print(res)
-    store_images_n_metadata_in_S3_bucket(s3_bucket_name, res, "low_res_image_path")
+    store_images_n_metadata_in_S3_bucket(s3_bucket_name, cloud_root, res, "low_res_image_path")
 
 
 def test():
@@ -92,14 +101,17 @@ def test():
                                          "localhost",
                                          "fashion")
     fetch_n_store(engine=engine,
-                  select=["low_res_image_path", "hi_res_image_path", "asset_link"],
+                  select=["id", "gender", "masterCategory", "subCategory", "articleType", "baseColour", "season",
+                          "year", "usage", "productDisplayName", "low_res_image_path", "hi_res_image_path",
+                          "asset_link"],
                   where_dict={
                       "gender": ["=", "Men"],
                       "subCategory": ["=", "shoes"],
                       "year": [">", "2012"],
                   },
                   order_by="year",
-                  s3_bucket_name="moemenfashionbucket")
+                  s3_bucket_name="moemenfashionbucket",
+                  cloud_root="Men/shoes/>2012/")
 
 
 if __name__ == '__main__':
