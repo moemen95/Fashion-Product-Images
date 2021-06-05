@@ -5,6 +5,7 @@ import boto3
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from tqdm import tqdm
+from helper_functions import timeit
 
 
 def connect_to_fashion_database(user, password, host, database_name) -> Engine:
@@ -20,6 +21,7 @@ def connect_to_fashion_database(user, password, host, database_name) -> Engine:
     return engine
 
 
+@timeit
 def fetch_query_from_meta_data(engine, select, where_dict, order_by='year') -> List[Dict]:
     """
     Simple API to query fetch from fashion database meta_data table and a little bit more generic usage
@@ -65,7 +67,8 @@ ORDER BY {}
     return ret
 
 
-def store_images_n_metadata_in_S3_bucket(bucket_name, cloud_root, rows: List[Dict], image_key) -> None:
+@timeit
+def store_images_n_metadata_in_s3_bucket(bucket_name, cloud_root, rows: List[Dict], image_key) -> None:
     """
     Store images and their metadata in json called (meta-data.json)
     :param bucket_name: name of the aws bucket
@@ -86,13 +89,33 @@ def store_images_n_metadata_in_S3_bucket(bucket_name, cloud_root, rows: List[Dic
     s3object.put(Body=(bytes(json.dumps(rows).encode('UTF-8'))))
 
 
+@timeit
 def fetch_n_store(engine, select, where_dict, order_by, s3_bucket_name, cloud_root) -> None:
+    """
+    Fetch the query using fetch_query_from_meta_data
+    Then Store the query results using store_images_n_metadata_in_S3_bucket
+    :param engine: the engine to connect to our database
+    :param select: the columns you wanna return
+    :param where_dict: the dictionary of the conditions you wanna fetch
+        Example:
+        where_dict={
+                        "gender": ["=", "Men"],
+                        "subCategory": ["=", "shoes"],
+                        "year": [">", "2012"],
+                    }
+        Key is the column name
+        Value is list of 2 items [Operator,Value]
+    :param order_by: order by one column name and if not set the year column will be used instead
+    :param s3_bucket_name: name of the aws bucket
+    :param cloud_root: root folder in the aws bucket
+    :return:
+    """
     res = fetch_query_from_meta_data(engine=engine,
                                      select=select,
                                      where_dict=where_dict,
                                      order_by=order_by)
     print(res)
-    store_images_n_metadata_in_S3_bucket(s3_bucket_name, cloud_root, res, "low_res_image_path")
+    store_images_n_metadata_in_s3_bucket(s3_bucket_name, cloud_root, res, "low_res_image_path")
 
 
 def test():
