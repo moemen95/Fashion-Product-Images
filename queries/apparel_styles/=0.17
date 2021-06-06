@@ -1,0 +1,11 @@
+Collecting scikit-learn
+  Downloading scikit_learn-0.24.2-cp36-cp36m-manylinux2010_x86_64.whl (22.2 MB)
+Collecting numpy>=1.13.3
+  Using cached numpy-1.19.5-cp36-cp36m-manylinux2010_x86_64.whl (14.8 MB)
+Collecting scipy>=0.19.1
+  Using cached scipy-1.5.4-cp36-cp36m-manylinux1_x86_64.whl (25.9 MB)
+Collecting threadpoolctl>=2.0.0
+  Using cached threadpoolctl-2.1.0-py3-none-any.whl (12 kB)
+Collecting joblib>=0.11
+  Using cached joblib-1.0.1-py3-none-any.whl (303 kB)
+Installing collected packages: numpy, threadpoolctl, scipy, joblib, scikit-learn

@@ -136,3 +136,7 @@ raw/
 
 # Images
 *.jpg
+
+# Data
+queries/apparel_styles/data/
+*.zip
