@@ -405,11 +405,12 @@ def predict_attributes(image_url, pretrained_model, attribute_models, attribute_
     
     image_features = image_loader(image_url, use_gpu=use_gpu)
 
-    print(image_features.size())
+    # print(image_features.size())
     pretrained_features = predict_model(pretrained_model, image_features, flatten=flatten_pretrained_out)
+    # print("pretrained_features: ", pretrained_features.size())
     results = {}
     for attrib_name, model in attribute_models.items():
-        print("Predicting {}".format(attrib_name))        
+        # print("Predicting {}".format(attrib_name))
         outputs = predict_model(model, pretrained_features)
         pred_prob, pred_class = outputs.data.max(1)        
         if use_gpu:
@@ -430,7 +431,7 @@ def create_attributes_fc_model(pretrained_fc, pretrained_features, fc_dim, targe
                             batch_size=32, num_workers=4, num_epochs=10,  use_gpu=None):
     models = {}
     for col_name, col_dim in target_columns.items():
-        print("Processing Attribute: {}".format(col_name))
+        # print("Processing Attribute: {}".format(col_name))
         weights_path = os.path.join(weights_root, col_name + ".pth")
         load_weights_path = None
         if os.path.exists(weights_path):
@@ -453,7 +454,7 @@ def create_attributes_model(ModelClass, in_dims, pretrained_features, target_col
                             batch_size=32, num_workers=4, num_epochs=10, use_gpu=None):
     models = {}
     for col_name, col_dim in target_columns.items():
-        print("Processing Attribute: {}".format(col_name))
+        # print("Processing Attribute: {}".format(col_name))
         weights_path = os.path.join(weights_root, col_name + ".pth")
         load_weights_path = None
         if os.path.exists(weights_path):
@@ -463,7 +464,7 @@ def create_attributes_model(ModelClass, in_dims, pretrained_features, target_col
             print("Start Training for: {}".format(col_name))
             model = train_model(model, pretrained_features, col_name, labels_file, train_images_folder, valid_images_folder,
                                batch_size, num_workers, num_epochs, use_gpu=use_gpu)
-        save_model(model, weights_path)
+            save_model(model, weights_path)
         models[col_name] = model
     return models
 
